@@ -56,6 +56,12 @@ sudo apt update
 sudo apt install -y mysql-server
 sudo systemctl enable --now mysql
 ```
++++++++++
+
+<img width="1859" height="352" alt="image_2026-02-27_11-31-29" src="https://github.com/user-attachments/assets/15f63377-c39b-4f43-a129-c84f118e85eb" />
+
++++++++++
+
 Настройка MASTER
 
 /etc/mysql/mysql.conf.d/mysqld.cnf
@@ -69,6 +75,12 @@ binlog_row_image        = FULL
 gtid_mode               = ON
 enforce_gtid_consistency= ON
 ```
++++++++++
+
+<img width="808" height="1087" alt="image_2026-02-27_15-44-58" src="https://github.com/user-attachments/assets/1f85c52c-0cce-45f3-81d2-c0c51b43136a" />
+
++++++++++
+
 Перезапуск:
 ```
 sudo systemctl restart mysql
@@ -85,6 +97,12 @@ FLUSH PRIVILEGES;
 SHOW GRANTS FOR 'repl'@'192.168.88.%';
 EXIT;
 ```
++++++++++
+
+<img width="836" height="735" alt="image_2026-02-27_11-37-48" src="https://github.com/user-attachments/assets/302d6954-b708-4f06-8227-17cd667854af" />
+
++++++++++
+
 Создадим тестовую БД demo
 ```
 sudo mysql -e "
@@ -99,15 +117,27 @@ INSERT INTO messages(txt) VALUES ('hello from master');
 SELECT * FROM messages;
 "
 ```
++++++++++
+
+<img width="603" height="376" alt="image_2026-02-27_11-39-48" src="https://github.com/user-attachments/assets/4927e01b-b221-49a9-aa30-eb1dafd44616" />
+
++++++++++
+
 Делаем дамп:
 ```
 mysqldump --single-transaction --set-gtid-purged=OFF demo > /tmp/demo.sql
 ls -lh /tmp/demo.sql
 ```
++++++++++
+
+<img width="929" height="90" alt="image_2026-02-27_11-42-00" src="https://github.com/user-attachments/assets/ac58d520-4f37-4c46-8ab2-f9d62aca3d01" />
+
++++++++++
 Копируем на SLAVE
 ```
 scp /tmp/demo.sql demin@192.162.88.107:/tmp/demo.sql
 ```
+
 Настройка SLAVE
 ```
 [mysqld]
@@ -129,6 +159,9 @@ sudo systemctl status mysql --no-pager
 sudo mysql < /tmp/demo.sql
 sudo mysql -e "SELECT * FROM demo.messages;"
 ```
++++++++++
+
++++++++++
 Подключение репликации на SLAVE
 ```
 sudo mysql
@@ -148,6 +181,12 @@ START REPLICA;
 SHOW REPLICA STATUS\G
 EXIT;
 ```
++++++++++
+
+<img width="815" height="1099" alt="image_2026-02-27_16-26-54" src="https://github.com/user-attachments/assets/9cd05886-4cc3-41bc-bd76-a828b84a9281" />
+
++++++++++
+
 Проверка master-slave
 На MASTER:
 ```
@@ -157,8 +196,15 @@ sudo mysql -e "INSERT INTO demo.messages(txt) VALUES ('row2 from master'); SELEC
 ```
 sudo mysql -e "SELECT * FROM demo.messages;"
 ```
++++++++++
 
+<img width="1747" height="250" alt="image_2026-02-27_17-34-26" src="https://github.com/user-attachments/assets/1a08080e-f389-4a3b-b0db-bdce696d19a1" />
 
++++++++++
+
+<img width="1746" height="259" alt="image_2026-02-27_17-35-59" src="https://github.com/user-attachments/assets/31aeaeaa-13eb-4903-8ee8-ca53976cb869" />
+
++++++++++
 
 ### Задание 3
 
