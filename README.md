@@ -78,11 +78,11 @@ sudo systemctl status mysql --no-pager
 ```
 sudo mysql
 
-CREATE USER 'repl'@'10.0.0.%' IDENTIFIED BY 'ReplPass_123!';
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'repl'@'10.0.0.%';
+CREATE USER 'repl'@'192.168.88.%' IDENTIFIED BY 'RPass_123';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'repl'@'192.168.88.%';
 FLUSH PRIVILEGES;
 
-SHOW GRANTS FOR 'repl'@'10.0.0.%';
+SHOW GRANTS FOR 'repl'@'192.168.88.%';
 EXIT;
 ```
 Создадим тестовую БД demo
@@ -106,7 +106,7 @@ ls -lh /tmp/demo.sql
 ```
 Копируем на SLAVE
 ```
-scp /tmp/demo.sql user@10.0.0.12:/tmp/demo.sql
+scp /tmp/demo.sql demin@192.162.88.107:/tmp/demo.sql
 ```
 Настройка SLAVE
 ```
@@ -137,10 +137,10 @@ STOP REPLICA;
 RESET REPLICA ALL;
 
 CHANGE REPLICATION SOURCE TO
-  SOURCE_HOST='10.0.0.11',
+  SOURCE_HOST='192.168.88.106',
   SOURCE_PORT=3306,
   SOURCE_USER='repl',
-  SOURCE_PASSWORD='ReplPass_123!',
+  SOURCE_PASSWORD='RPass_123',
   SOURCE_AUTO_POSITION=1;
 
 START REPLICA;
@@ -180,11 +180,19 @@ enforce_gtid_consistency= ON
 log_replica_updates      = ON
 
 auto_increment_increment = 2
-# На сервере A:
-# auto_increment_offset  = 1
-# На сервере B:
-# auto_increment_offset  = 2
+auto_increment_offset  = 1
+# auto_increment_offset  = 2 на втором сервере
 ```
++++++++++
+
+<img width="1920" height="525" alt="image_2026-02-27_17-45-58" src="https://github.com/user-attachments/assets/41e61f7a-7598-4fb8-a5d6-49e75b1c98f4" />
+
++++++++++
+
+<img width="1920" height="730" alt="image_2026-02-27_18-05-12" src="https://github.com/user-attachments/assets/34bc7500-0206-4745-a157-440e0af3124a" />
+
++++++++++
+
 Перезапуск:
 ```
 sudo systemctl restart mysql
@@ -192,10 +200,16 @@ sudo systemctl restart mysql
 Пользователь репликации на A и B
 На A:
 ```
-CREATE USER 'repl'@'10.0.0.%' IDENTIFIED BY 'ReplPass_123!';
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'repl'@'10.0.0.%';
+CREATE USER 'repl'@'192.168.88.%' IDENTIFIED BY 'RPass_123';
+GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'repl'@'192.168.88.%;
 FLUSH PRIVILEGES;
 ```
++++++++++
+
+<img width="1920" height="214" alt="image_2026-02-27_18-06-26" src="https://github.com/user-attachments/assets/b179f896-25aa-40b7-b84b-7c9f0602eb3e" />
+
++++++++++
+
 На B — то же самое.
 
 Репликация в обе стороны
@@ -205,10 +219,10 @@ STOP REPLICA;
 RESET REPLICA ALL;
 
 CHANGE REPLICATION SOURCE TO
-  SOURCE_HOST='10.0.0.12',
+  SOURCE_HOST='192.168.88.107',
   SOURCE_PORT=3306,
   SOURCE_USER='repl',
-  SOURCE_PASSWORD='ReplPass_123!',
+  SOURCE_PASSWORD='RPass_123',
   SOURCE_AUTO_POSITION=1;
 
 START REPLICA;
@@ -221,15 +235,21 @@ STOP REPLICA;
 RESET REPLICA ALL;
 
 CHANGE REPLICATION SOURCE TO
-  SOURCE_HOST='10.0.0.11',
+  SOURCE_HOST='192.168.88.106',
   SOURCE_PORT=3306,
   SOURCE_USER='repl',
-  SOURCE_PASSWORD='ReplPass_123!',
+  SOURCE_PASSWORD='RPass_123',
   SOURCE_AUTO_POSITION=1;
 
 START REPLICA;
 SHOW REPLICA STATUS\G
 ```
++++++++++
+
+<img width="1904" height="1119" alt="image_2026-02-27_18-34-14" src="https://github.com/user-attachments/assets/3288a9b0-3ce5-4724-aa99-9f3670d69e09" />
+
++++++++++
+
 Проверка master-master
 Тест A → B:
 ```
@@ -242,6 +262,12 @@ SELECT * FROM t;"
 # На B:
 sudo mysql -e "SELECT * FROM mm.t;"
 ```
++++++++++
+
+<img width="1904" height="198" alt="image_2026-02-27_18-35-02" src="https://github.com/user-attachments/assets/d5097a2c-6dfb-43a2-906c-c7a5284130a5" />
+
++++++++++
+
 Тест B → A:
 ```￼
 # На B:
@@ -250,3 +276,8 @@ sudo mysql -e "INSERT INTO mm.t(v) VALUES ('from B'); SELECT * FROM mm.t;"
 # На A:
 sudo mysql -e "SELECT * FROM mm.t;"
 ```
++++++++++
+
+<img width="1904" height="198" alt="image_2026-02-27_18-35-45" src="https://github.com/user-attachments/assets/952a713f-eaa9-4262-a350-06f9daad9140" />
+
++++++++++
